@@ -1,2 +1,1 @@
-# riscv-archc
-# riscv-archc
+RISC-V ArchC Processor Model
