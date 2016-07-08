@@ -1,0 +1,241 @@
+/*************************************************
+**************************************************
+*	@file		riscv_isa.ac
+*	@author		Dário Dias
+*	@email		dsd@cin.ufpe.br		
+*	@version	0.20
+*	@date		8 July 2016
+*	@brief		The ArchC Risc-V functional model.
+**************************************************
+*************************************************/
+
+AC_ISA(riscv){
+
+	ac_format R_type = "%funct7:7 %rs2:5 %rs1:5 %funct3:3 %rd:5 %opcode:7";
+	ac_format I_type = "%imm:12 %rs1:5 %funct3:3 %rd:5 %opcode:7";
+	ac_format S_type = "%imm11to5:7 %rs2:5 %rs1:5 %funct3:3 %imm4to0:5 %opcode:7";
+	ac_format SB_type = "%imm12:1 %imm10to5:6 %rs2:5 %rs1:5 %funct3:3 %imm4to1:4 %imm11:1 %opcode:7";
+	ac_format U_type = "%imm:20 %rd:5 %opcode:7";
+	ac_format UJ_type = "%imm20:1 %imm10to1:10 %imm11:1 %imm19to12:8 %rd:5 %opcode:7";
+
+	ac_instr<R_type> add, instr_and, instr_xor, instr_or, sub, sll, slt, sltu, srl, sra, mul, mulh, mulhu, mulhsu, div, divu, rem, remu,
+					 amoswap_w, amoadd_w, amoxor_w, amoand_w, amoor_w, amomin_w, amomax_w, amominu_w, amomaxu_w;
+	ac_instr<I_type> jalr, addi, sbreak, lw, lb, lbu, lh, lhu, srli, slli, andi, slti, sltiu, xori, ori,
+					 csrrw, csrrs, csrrc, csrrwi, csrrsi, csrrci;
+	ac_instr<S_type> sw, sb, sh;
+	ac_instr<SB_type> beq, bne, blt, bge, bltu, bgeu;
+	ac_instr<U_type> lui, auipc;
+	ac_instr<UJ_type> jal;
+	
+
+	ac_asm_map reg {
+		"$x0" = 0;
+		"$x"[1..31] = [1..31];
+	}
+
+
+	ISA_CTOR(riscv){
+
+		///////////////////////////////////////
+		// RV32I base integer instruction set//
+		///////////////////////////////////////
+
+		lui.set_asm("lui %reg, %imm", rd, imm);
+		lui.set_decoder(opcode=0x37);
+		
+		auipc.set_asm("auipc %reg, %imm", rd, imm);
+		auipc.set_decoder(opcode=0x17);
+
+		jal.set_asm("jal %reg, %imm", rd, imm20+imm19to12+imm11+imm10to1);
+		jal.set_decoder(opcode=0x6F);
+			
+		jalr.set_asm("jalr %reg, %reg, %imm", rd, rs1, imm);
+		jalr.set_decoder(opcode=0x67, funct3=0x00);
+
+		beq.set_asm("beq %reg, %reg, %imm", rs1, rs2, imm12+imm11+imm10to5+imm4to1);
+		beq.set_decoder(opcode=0x63, funct3=0x00);
+
+		bne.set_asm("bne %reg, %reg, %imm", rs1, rs2, imm12+imm11+imm10to5+imm4to1);
+		bne.set_decoder(opcode=0x63, funct3=0x01);
+
+		blt.set_asm("bne %reg, %reg, %imm", rs1, rs2, imm12+imm11+imm10to5+imm4to1);
+		blt.set_decoder(opcode=0x63, funct3=0x04);
+
+		bltu.set_asm("bltu %reg, %reg, %imm", rs1, rs2, imm12+imm11+imm10to5+imm4to1);
+		bltu.set_decoder(opcode=0x63, funct3=0x06);
+	
+		bge.set_asm("bge %reg, %reg, %imm(signex)", rs1, rs2, imm12+imm11+imm10to5+imm4to1);
+		bge.set_decoder(opcode=0x63, funct3=0x05);
+
+		bgeu.set_asm("bgeu %reg, %reg, %imm", rs1, rs2, imm12+imm11+imm10to5+imm4to1);
+		bgeu.set_decoder(opcode=0x63, funct3=0x07);
+
+		lw.set_asm("lw %reg, %imm (%reg)", rd, imm, rs1);
+		lw.set_decoder(opcode=0x03, funct3=0x02);
+
+		lh.set_asm("lh %reg, %imm (%reg)", rd, imm, rs1);
+		lh.set_decoder(opcode=0x03, funct3=0x01);
+
+		lhu.set_asm("lhu %reg, %imm (%reg)", rd, imm, rs1);
+		lhu.set_decoder(opcode=0x03, funct3=0x05);
+
+		lb.set_asm("lb %reg, %imm (%reg)", rd, imm, rs1);
+		lb.set_decoder(opcode=0x03, funct3=0x00);
+
+		lbu.set_asm("lbu %reg, %imm (%reg)", rd, imm, rs1);
+		lbu.set_decoder(opcode=0x03, funct3=0x04);
+
+		sw.set_asm("sw %reg, %imm (%reg)", rs2, imm11to5+imm4to0, rs1);
+		sw.set_decoder(opcode=0x23, funct3=0x02);
+
+		sb.set_asm("sb %reg, %imm (%reg)", rs2, imm11to5+imm4to0, rs1);
+    	sb.set_decoder(opcode=0x23, funct3=0x00);
+
+		sh.set_asm("sh %reg, %imm (%reg)", rs2, imm11to5+imm4to0, rs1);
+    	sh.set_decoder(opcode=0x23, funct3=0x01);
+		
+		addi.set_asm("addi %reg, %reg, %imm", rd, rs1, imm);
+		addi.set_decoder(opcode=0x13, funct3=0x00);
+	
+		slti.set_asm("slti %reg, %reg, %imm", rd, rs1, imm);
+		slti.set_decoder(opcode=0x13, funct3=0x02);
+
+		sltiu.set_asm("sltiu %reg, %reg, %imm", rd, rs1, imm);
+		sltiu.set_decoder(opcode=0x13, funct3=0x03);
+
+		xori.set_asm("xori %reg, %reg, %imm", rd, rs1, imm);
+		xori.set_decoder(opcode=0x13, funct3=0x04);
+
+		ori.set_asm("ori %reg, %reg, %imm", rd, rs1, imm);
+		ori.set_decoder(opcode=0x13, funct3=0x06);
+
+		andi.set_asm("andi %reg, %reg, %imm", rd, rs1, imm);
+		andi.set_decoder(opcode=0x13, funct3=0x07);
+
+		slli.set_asm("slli %reg, %reg, %imm", rd, rs1, imm);
+		slli.set_decoder(opcode=0x13, funct3=0x01);
+
+		//includes srli and srai instructions
+		srli.set_asm("srli %reg, %reg, %imm", rd, rs1, imm);
+		srli.set_decoder(opcode=0x13, funct3=0x05);
+
+		add.set_asm("add %reg, %reg, %reg", rd, rs1, rs2);
+		add.set_decoder(opcode=0x33, funct3=0x00, funct7=0x00);
+
+		sub.set_asm("sub %reg, %reg, %reg", rd, rs1, rs2);
+		sub.set_decoder(opcode=0x33, funct3=0x00, funct7=0x20);
+
+		sll.set_asm("sll %reg, %reg, %reg", rd, rs1, rs2);
+		sll.set_decoder(opcode=0x33, funct3=0x01, funct7=0x00);
+
+		slt.set_asm("slt %reg, %reg, %reg", rd, rs1, rs2);
+		slt.set_decoder(opcode=0x33, funct3=0x02, funct7=0x00);
+
+		sltu.set_asm("slt %reg, %reg, %reg", rd, rs1, rs2);
+		sltu.set_decoder(opcode=0x33, funct3=0x03, funct7=0x00);
+
+		instr_xor.set_asm("xor %reg, %reg, %reg", rd, rs1, rs2);
+		instr_xor.set_decoder(opcode=0x33, funct3=0x04, funct7=0x00);
+
+		srl.set_asm("srl %reg, %reg, %reg", rd, rs1, rs2);
+		srl.set_decoder(opcode=0x33, funct3=0x05, funct7=0x00);
+
+		sra.set_asm("sra %reg, %reg, %reg", rd, rs1, rs2);
+		sra.set_decoder(opcode=0x33, funct3=0x05, funct7=0x20);
+
+		instr_or.set_asm("or %reg, %reg, %reg", rd, rs1, rs2);
+		instr_or.set_decoder(opcode=0x33, funct3=0x06, funct7=0x00);
+
+		instr_and.set_asm("and %reg, %reg, %reg", rd, rs1, rs2);
+		instr_and.set_decoder(opcode=0x33, funct3=0x07, funct7=0x00);
+
+		sbreak.set_asm("sbreak", rd=0, rs1=0, imm=1);
+		sbreak.set_decoder(opcode=0x73, funct3=0x00);
+
+		//////////////////////////////////////////////////////////////////
+		//"M" standard extension for integer multiplication and division//
+		//////////////////////////////////////////////////////////////////
+
+		mul.set_asm("mul %reg, %reg, %reg", rd, rs1, rs2);
+		mul.set_decoder(opcode=0x33, funct3=0x00, funct7=0x01);
+
+		mulh.set_asm("mulh %reg, %reg, %reg", rd, rs1, rs2);
+		mulh.set_decoder(opcode=0x33, funct3=0x01, funct7=0x01);
+
+		mulhsu.set_asm("mulhsu %reg, %reg, %reg", rd, rs1, rs2);
+		mulhsu.set_decoder(opcode=0x33, funct3=0x02, funct7=0x01);
+
+		mulhu.set_asm("mulhu %reg, %reg, %reg", rd, rs1, rs2);
+		mulhu.set_decoder(opcode=0x33, funct3=0x03, funct7=0x01);
+
+		div.set_asm("div %reg, %reg, %reg", rd, rs1, rs2);
+		div.set_decoder(opcode=0x33, funct3=0x04, funct7=0x01);
+
+		divu.set_asm("divu %reg, %reg, %reg", rd, rs1, rs2);
+		divu.set_decoder(opcode=0x33, funct3=0x05, funct7=0x01);
+
+		rem.set_asm("rem %reg, %reg, %reg", rd, rs1, rs2);
+		rem.set_decoder(opcode=0x33, funct3=0x06, funct7=0x01);
+
+		remu.set_asm("remu %reg, %reg, %reg", rd, rs1, rs2);
+		remu.set_decoder(opcode=0x33, funct3=0x07, funct7=0x01);
+
+		//////////////////////////////////////////////////
+		//"A" standard extension for atomic instructions//
+		//////////////////////////////////////////////////
+
+		//TODO LR/SC instructions
+
+		amoswap_w.set_asm("amoswap.w %reg, %reg, %reg", rd, rs1, rs2);
+		amoswap_w.set_decoder(opcode=0x2f, funct3=0x02, funct7=0x04);
+
+		amoadd_w.set_asm("amoadd.w %reg, %reg, %reg", rd, rs1, rs2);
+		amoadd_w.set_decoder(opcode=0x2f, funct3=0x02, funct7=0x00);
+
+		amoxor_w.set_asm("amoxor.w %reg, %reg, %reg", rd, rs1, rs2);
+		amoxor_w.set_decoder(opcode=0x2f, funct3=0x02, funct7=0x10);
+
+		amoand_w.set_asm("amoand.w %reg, %reg, %reg", rd, rs1, rs2);
+		amoand_w.set_decoder(opcode=0x2f, funct3=0x02, funct7=0x30);
+
+		amoor_w.set_asm("amoor.w %reg, %reg, %reg", rd, rs1, rs2);
+		amoor_w.set_decoder(opcode=0x2f, funct3=0x02, funct7=0x20);
+
+		amomin_w.set_asm("amomin.w %reg, %reg, %reg", rd, rs1, rs2);
+		amomin_w.set_decoder(opcode=0x2f, funct3=0x02, funct7=0x40);
+
+		amomax_w.set_asm("amomax.w %reg, %reg, %reg", rd, rs1, rs2);
+		amomax_w.set_decoder(opcode=0x2f, funct3=0x02, funct7=0x50);
+
+		amominu_w.set_asm("amominu.w %reg, %reg, %reg", rd, rs1, rs2);
+		amominu_w.set_decoder(opcode=0x2f, funct3=0x02, funct7=0x60);
+
+		amomaxu_w.set_asm("amomaxu.w %reg, %reg, %reg", rd, rs1, rs2);
+		amomaxu_w.set_decoder(opcode=0x2f, funct3=0x02, funct7=0x70);
+
+		////////////////////////////////////////////
+		// Privileged instructions to access CSRs //
+		////////////////////////////////////////////
+
+		csrrw.set_asm("csrrw %reg, %imm, %reg", rd, imm, rs1);	//imm = csr
+		csrrw.set_decoder(opcode=0x73, funct3=0x01);
+
+		csrrs.set_asm("csrrs %reg, %imm, %reg", rd, imm, rs1);	//imm = csr
+		csrrs.set_decoder(opcode=0x73, funct3=0x02);
+
+		csrrc.set_asm("csrrc %reg, %imm, %reg", rd, imm, rs1);	//imm = csr
+		csrrc.set_decoder(opcode=0x73, funct3=0x03);
+
+		csrrwi.set_asm("csrrwi %reg, %imm, %reg", rd, imm, rs1);	//imm = csr    rs1 = zimm
+		csrrwi.set_decoder(opcode=0x73, funct3=0x05);
+
+		csrrsi.set_asm("csrrsi %reg, %imm, %reg", rd, imm, rs1);	//imm = csr    rs1 = zimm
+		csrrsi.set_decoder(opcode=0x73, funct3=0x06);
+
+		csrrci.set_asm("csrrci %reg, %imm, %reg", rd, imm, rs1);	//imm = csr    rs1 = zimm
+		csrrci.set_decoder(opcode=0x73, funct3=0x07);
+
+
+	};
+
+};
