@@ -1,11 +1,13 @@
 /*************************************************
 **************************************************
-*	@file		riscv_syscall.cpp
-*	@author		Dário Dias
-*	@email		dsd@cin.ufpe.br		
-*	@version	0.20
-*	@date		8 July 2016
-*	@brief		The ArchC Risc-V functional model.
+*	@file		      riscv_syscall.cpp
+*	@author		    Dário Dias
+*	@email		    dsd@cin.ufpe.br		
+* @institution	Federal University of Pernambuco
+* @department   Center of Informatic CIn
+*	@version	    0.20
+*	@date		      8 July 2016
+*	@brief		    The ArchC Risc-V functional model.
 **************************************************
 *************************************************/
 
