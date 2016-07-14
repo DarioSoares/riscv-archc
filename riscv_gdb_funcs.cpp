@@ -1,13 +1,13 @@
 /*************************************************
 **************************************************
-*	@file		      riscv_gdb_funcs.cpp
-*	@author		   Dário Dias
-*	@email		   dsd@cin.ufpe.br		
-*	@version	      0.20
-* 	@institution   Federal University of Pernambuco
-*  @department    Center of Informatic - CIn
-*	@date		      8 July 2016
-*	@brief		   The ArchC Risc-V functional model.
+*	@file		         riscv_gdb_funcs.cpp
+*	@author		      Dário Dias
+*	@email		      dsd@cin.ufpe.br		
+*	@version	         0.20
+* 	@institution      Federal University of Pernambuco
+*  @department       Center of Informatic - CIn
+*	@date		         8 July 2016
+*	@brief		      The ArchC Risc-V functional model.
 **************************************************
 *************************************************/
 
